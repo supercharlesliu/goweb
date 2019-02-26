@@ -8,7 +8,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	port := 8080
+	port := 8081
 
 	appConfig := &AppServerConfig{
 		Addr:           ":" + strconv.Itoa(port),
@@ -42,6 +42,15 @@ func TestMain(m *testing.M) {
 		resp.WriteString(req.PathParam("siteId"))
 		return nil
 	}, nil)
+
+	hub := NewRouterHub("/hubs/")
+	hub.AddRequestFilter(NewRequestFilter(func(resp *Response, ctx *RequestContext) error {
+		return nil
+	}))
+	hub.AddRouter(NewRouter("/hubs/:id", func(req *Request, resp *Response, ctx *RequestContext) error {
+		return nil
+	}, DefaultRouterConfig))
+	server.AddHub(hub)
 
 	server.Start()
 	// m.Run()

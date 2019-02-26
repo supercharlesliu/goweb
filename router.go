@@ -1,66 +1,34 @@
 package goweb
 
-import (
-	"errors"
-)
-
+// RouterConfig config for a router
 type RouterConfig struct {
 	DisableAccessLog bool
 }
 
-type RouterHub struct {
-	BasePattern        string
-	PathDepthRouterMap map[int]([]*Router)
+var DefaultRouterConfig *RouterConfig
+
+func init() {
+	DefaultRouterConfig = &RouterConfig{DisableAccessLog: false}
 }
 
-func NewRouterHub(basePattern string) *RouterHub {
-	return &RouterHub{
-		BasePattern:        basePattern,
-		PathDepthRouterMap: make(map[int]([]*Router), 0),
-	}
-}
-
-func (rh *RouterHub) AddRouter(r *Router) {
-	if r.PathConfig.PatternString() != rh.BasePattern {
-		panic(errors.New("Router hub base pattern not match"))
-	}
-	dp := r.PathConfig.PathDepth
-	list, found := rh.PathDepthRouterMap[dp]
-	if !found {
-		list = make([]*Router, 0)
-	}
-	list = append(list, r)
-	rh.PathDepthRouterMap[dp] = list
-}
-
-func (rh *RouterHub) HandleRequest(req *Request, resp *Response, ctx *RequestContext) error {
-	path := req.URL.Path
-	pd := PathDepth(path)
-
-	list, found := rh.PathDepthRouterMap[pd]
-	if found {
-		for _, router := range list {
-			match, params := router.PathConfig.Match(path)
-			if match {
-				req.pathParam = params
-				router.HandleRequest(req, resp, ctx)
-				return nil
-			}
-		}
-	}
-
-	// No Match
-	resp.NotFound()
-	return nil
-}
-
+// Router represent a router rule
 type Router struct {
 	HandlerFunc RequestHandlerFunc
 	PathConfig  *PathConfig
 	Config      *RouterConfig
-	AppServer   *AppServer
 }
 
+// HandleRequest implements the standard HandlerFunc interface
 func (r *Router) HandleRequest(req *Request, resp *Response, ctx *RequestContext) error {
 	return r.HandlerFunc(req, resp, ctx)
+}
+
+// NewRouter create a router object
+func NewRouter(pattern string, handlerFunc RequestHandlerFunc, config *RouterConfig) *Router {
+	pathConfig := ParsePathParam(pattern)
+	return &Router{
+		HandlerFunc: handlerFunc,
+		PathConfig:  pathConfig,
+		Config:      config,
+	}
 }

@@ -1,8 +1,9 @@
 package goweb
 
 import (
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 type JSONResponse struct {
@@ -20,6 +21,7 @@ type Controller struct {
 	MethodFuncMap map[string]*reflect.Value
 }
 
+// Invoke invoke controller method
 func (cm *Controller) Invoke(req *Request, resp *Response, context *RequestContext) error {
 	methodRef, found := cm.MethodFuncMap[req.Req.Method]
 	if !found {

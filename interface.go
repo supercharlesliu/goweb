@@ -14,9 +14,12 @@ type FormValidator interface {
 	ValidateForm() error
 }
 
+// RequestFilterFunc type of request filter
+type RequestFilterFunc func(resp *Response, ctx *RequestContext) error
+
 // RequestFilter a filter to pre-process request before it goes to RequestHandler
 type RequestFilter interface {
-	FilterRequest(resp *Response, ctx *RequestContext) (bool, error)
+	FilterRequest(resp *Response, ctx *RequestContext) error
 }
 
 // RequestHandler handle request and generate response

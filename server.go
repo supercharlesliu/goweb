@@ -1,6 +1,7 @@
 package goweb
 
 import (
+	"log"
 	"net/http"
 	"time"
 )
@@ -65,24 +66,23 @@ func (server *AppServer) AddController(pattern string, ins interface{}, methodMa
 	})
 }
 
-func (server *AppServer) AddRouter(pattern string, handlerFunc RequestHandlerFunc, config *RouterConfig) {
-	pathConfig := ParsePathParam(pattern)
-	router := &Router{
-		HandlerFunc: handlerFunc,
-		PathConfig:  pathConfig,
-		Config:      config,
-		AppServer:   server,
-	}
+// AddHub add router hub to the server
+func (server *AppServer) AddHub(hub *RouterHub) {
+	server.Handle(hub.BasePattern, hub, false)
+}
 
-	list, found := server.basePatternRouterMap[pathConfig.PatternString()]
+func (server *AppServer) AddRouter(pattern string, handlerFunc RequestHandlerFunc, config *RouterConfig) {
+	router := NewRouter(pattern, handlerFunc, config)
+
+	list, found := server.basePatternRouterMap[router.PathConfig.PatternString()]
 	if !found {
 		list = make([]*Router, 0)
 	}
 	list = append(list, router)
-	server.basePatternRouterMap[pathConfig.PatternString()] = list
+	server.basePatternRouterMap[router.PathConfig.PatternString()] = list
 }
 
-func (server *AppServer) handle(pattern string, h RequestHandler, disableAccessLog bool) {
+func (server *AppServer) Handle(pattern string, h RequestHandler, disableAccessLog bool) {
 	server.ServeMux.Handle(pattern, &RouterAdapter{
 		RequestHandler:   h,
 		AppServer:        server,
@@ -95,16 +95,16 @@ func (server *AppServer) Start() {
 	// process routers
 	for basePattern, list := range server.basePatternRouterMap {
 		if len(list) == 1 && list[0].PathConfig.IsPlainPath() {
-			server.handle(basePattern, list[0], list[0].Config.DisableAccessLog) // TODO: fix ugly access
+			server.Handle(basePattern, list[0], list[0].Config.DisableAccessLog) // TODO: fix ugly access
 		} else {
 			// need a hub
 			hub := NewRouterHub(basePattern)
 			for _, router := range list {
 				hub.AddRouter(router)
 			}
-			server.handle(basePattern, hub, false)
+			server.AddHub(hub)
 		}
 	}
 
-	server.Server.ListenAndServe()
+	log.Fatal(server.Server.ListenAndServe())
 }
