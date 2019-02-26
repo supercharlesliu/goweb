@@ -44,6 +44,16 @@ func (rh *RouterHub) AddRouter(r *Router) {
 	rh.PathDepthRouterMap[dp] = list
 }
 
+// AddController add controller to the hub
+func (rh *RouterHub) AddController(pattern string, ins interface{}, methodMap map[string]string) {
+	c, err := WrapController(ins, methodMap)
+	if err != nil {
+		panic(err)
+	}
+	router := NewRouter(pattern, c, DefaultRouterConfig)
+	rh.AddRouter(router)
+}
+
 // AddRequestFilter add new request filter to the hub
 func (rh *RouterHub) AddRequestFilter(filter RequestFilter) {
 	rh.requestFilters = append(rh.requestFilters, filter)
