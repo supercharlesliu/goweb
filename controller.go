@@ -51,7 +51,7 @@ func (cm *Controller) Invoke(req *Request, resp *Response, context *RequestConte
 	return nil
 }
 
-func NewController(ins interface{}, methodMap map[string]string) (RequestHandlerFunc, error) {
+func WrapController(ins interface{}, methodMap map[string]string) (RequestHandlerFunc, error) {
 	v := reflect.ValueOf(ins)
 	methodFuncMap := make(map[string]*reflect.Value, 0)
 

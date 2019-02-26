@@ -57,7 +57,7 @@ func (server *AppServer) ResponseText(url string, responseStr string) {
 
 // AddController register controller to this AppServer
 func (server *AppServer) AddController(pattern string, ins interface{}, methodMap map[string]string) {
-	c, err := NewController(ins, methodMap)
+	c, err := WrapController(ins, methodMap)
 	if err != nil {
 		panic(err)
 	}
