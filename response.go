@@ -3,6 +3,7 @@ package goweb
 import (
 	"encoding/json"
 	"encoding/xml"
+	"html/template"
 	"net/http"
 )
 
@@ -58,6 +59,12 @@ func (resp *Response) WriteXML(data interface{}) error {
 	enc := xml.NewEncoder(resp)
 	err := enc.Encode(data)
 	return err
+}
+
+// RenderTemplate render a set of templates with data as the context
+func (resp *Response) RenderTemplate(data interface{}, tpls ...string) error {
+	tmpl := template.Must(template.ParseFiles(tpls...))
+	return tmpl.Execute(resp.Writer, data)
 }
 
 // Header get HTTP header
